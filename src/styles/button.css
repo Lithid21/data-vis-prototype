@@ -7,6 +7,9 @@
     text-decoration: none;
     display: inline-block;
     font-size: 16px;
+    position: absolute;
+    left: 0%;
+    top: 75%;
   }
 
 .loginButton {
@@ -18,4 +21,7 @@
     text-decoration: none;
     display: inline-block;
     font-size: 16px;
+    position: absolute;
+    left: 0%;
+    top: 75%;
   }

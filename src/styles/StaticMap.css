@@ -1,0 +1,10 @@
+.staticMap {
+  padding: 0;
+  margin: 0;
+  height: 70%;
+  width: 100%;
+  /* border: 3px solid #d39716; */
+  position: absolute;
+  left: 0%;
+  top: 0%;
+}
