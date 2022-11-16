@@ -9,19 +9,14 @@ import "./App.css";
 
 function App() {
   const { isAuthenticated } = useAuth0();
-  const [selectedState,setSelectedState] = useState(42);
-
-  const stateOptions = [
-    {value: 42, label: "PA"},
-    {value: 25, label: "MA"}
-  ];
+  const [selectedState,setSelectedState] = useState('PA');
 
   return(
     <div className="App">
       <AuthenticationButton />
       {isAuthenticated && (
         <>
-          {<StaticMap selectedState={'PA'} setSelectedState={setSelectedState} stateOptions={stateOptions}/>}
+          {<StaticMap selectedState={selectedState} setSelectedState={setSelectedState}/>}
         </>
         )
       }
