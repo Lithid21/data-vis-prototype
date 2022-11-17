@@ -1,305 +1,82 @@
 import React, { useRef, useEffect, useState } from "react";
 
-import esriId from "@arcgis/core/identity/IdentityManager";
-import MapView from "@arcgis/core/views/MapView";
-import Map from "@arcgis/core/Map";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Graphic from "@arcgis/core/Graphic";
 
-import Legend from "@arcgis/core/widgets/Legend";
-import Fullscreen from "@arcgis/core/widgets/Fullscreen";
-import LayerList from "@arcgis/core/widgets/LayerList";
-import Bookmarks from "@arcgis/core/widgets/Bookmarks";
-import Bookmark from "@arcgis/core/webmap/Bookmark";
-import Expand from "@arcgis/core/widgets/Expand";
-
+// utils
 import "../styles/StaticMap.css";
-import {stateToFips} from "../helper/stateToFips";
+import { authorizeEsriId } from "../utils/auth.js";
+import { fetchGeoLayer } from "../utils/fetchGeoLayer.js";
+import { fetchEnvData } from "../utils/fetchEnvData.js";
+import { getSelectedGeoData } from "../utils/getSelectedGeoData.js";
+import { createMapView } from "../utils/createMapView.js";
 
-function BuiltMap(props) {
-
+function StaticMap(props) {
     const mapDiv = useRef(null);
     const [token,setToken] = useState(null);  // ArcGIS OAuth token
-    const [countyLayer, setCountyLayer] = useState(null);   // FeatureLayer with county geospatial data
-    // Data for the current state
-    const [geoData, setGeoData] = useState(null);
-    const [centroids, setCentroids] = useState(null);
+    const [geoLayer, setGeoLayer] = useState(null);   // FeatureLayer with county geospatial data
+    // geoData for the current state
+    const [selectedGeoData, setSelectedGeoData] = useState(null);   // objected with keys: features, centroids
+    // Raw data for layers from API for current state
     const [censusData, setCensusData] = useState(null);
     const [covidData, setCovidData] = useState(null);
     const [fluData, setFluData] = useState(null);
+    // map state
+    const [view, setView] = useState(null);
   
-    // Getting the token
+    ///// Effect: Getting the token
     useEffect(()=> {
-        ///// Will's OAuth
-        const clientId = "w6lIDWNWL3EmLRkJ";
-        const clientSecret = "a174ae801bcf41fc8ce361827816f1fa";
-        ///// JP's OAuth
-        //   const clientId = "q3224G4yMQPVZUqd";
-        //   const clientSecret = "e84b18bfa0c84f21a50facbd4cd40756";
-    
-        // for the body of the token request
-        const parameters = new FormData(); 
-        parameters.append('f', 'json');
-        parameters.append('client_id', clientId);
-        parameters.append('client_secret', clientSecret);
-        parameters.append('grant_type', 'client_credentials');
-        parameters.append('expiration', 1440);    
-
-        // POST to token endpoint, then register the token after it is received.
-        fetch("https://www.arcgis.com/sharing/rest/oauth2/token/",{ method: 'POST', body:parameters })
-            .then( (response) => {  //converts the token to a json
-                return response.json();
-            })
-            .then( tokenJSON => {   //registers the token to identity manager
-                setToken(tokenJSON.access_token); //Sets the token state
-                const regProps = {
-                    server: "https://www.arcgis.com/sharing/rest",
-                    token: tokenJSON.access_token
-                };
-                esriId.registerToken(regProps); //Registers the token to the IdentityManager
-                return;
-            })
-            .then( () =>{   // Gets the county map layer and saves it to state
-                
-                /////////
-                // County Layer grabbing
-                /////////
-                const importLayer = new FeatureLayer({
-                    // url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Census_Tracts/FeatureServer/0", // JP's census tract map
-                    // url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_Census_Tracts/FeatureServer/0", // "Will's" census tract map
-                    url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Census_Counties/FeatureServer/0", // "Will's" county map
-                    // url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Census_States/FeatureServer/0", // "will's" state map
-                    // outFields: ["STCOFIPS","POPULATION"], // For JP's census map
-                    // outFields: ["FIPS","POPULATION"],  //For county map, this is combined state-county FIPS
-                    outFields: ["FIPS","STATE_FIPS","STATE_ABBR"],
-                    // outFields: ["*"],
-                    // opacity: 0.5,
-                    id: "county-layer"
-                });
-                // console.log("county layer");
-                // console.log(importLayer);
-                setCountyLayer(importLayer);
-            })
-            .catch( (e) => console.log(e));
+        setToken(authorizeEsriId());
     },[]);
 
-    // Get all the data required for the state via API and queryFeatures()
-    useEffect(()=>{
-        if(mapDiv.current && token){
-            //////////////////////////
-            // API Calls for state's data by county (census, covid, & flu)
-            //////////////////////////
-
-            // the basics
-            const baseUrl = "https://s06zux4ss0.execute-api.us-east-1.amazonaws.com/staging/api/environmental/";
-            const apiKey = "1gvZdDqRQR9AhQBdSe6d92EXulDs0zxwolGrBOMc"; //Staging API key
-            const queryOptions = {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': apiKey 
-                }
-            };
-
-            //Census Data
-            const censusUrl = baseUrl + `?type=census&state=${props.selectedState}`;
-            fetch(censusUrl,queryOptions)
-                .then( (response) => {
-                    // console.log(response);
-                    return response.json();
-                })
-                .then( (dataJSON) => { 
-                    // console.log(dataJSON);
-                    setCensusData(dataJSON);
-                })
-                .catch( (e) => console.log(e));
-
-            //Covid Data
-            const covidUrl = baseUrl + `?type=covid&state=${props.selectedState}`;
-            fetch(covidUrl,queryOptions)
-                .then( (response) => {
-                    // console.log(response);
-                    return response.json();
-                })
-                .then( (dataJSON) => { 
-                    // console.log(dataJSON);
-                    setCovidData(dataJSON);
-                })
-                .catch( (e) => console.log(e));
-
-            //Flu Data
-            const fluUrl = baseUrl + `?type=flu&state=${props.selectedState}`;
-            fetch(fluUrl,queryOptions)
-                .then( (response) => {
-                    // console.log(response);
-                    return response.json();
-                })
-                .then( (dataJSON) => { 
-                    // console.log(dataJSON);
-                    setFluData(dataJSON);
-                })
-                .catch( (e) => console.log(e));
-
-            //////////
-            // Grab the geospatial data for the state. Since the layer is not in a view, this queries directly from the service.
-            //////////
-
-            const stateFips = stateToFips[props.selectedState];
-
-            //create the query for the Layer. Just grab all features
-            const query = countyLayer.createQuery();
-            query.set({
-              where: `STATE_FIPS = '${stateFips}'`,
-              returnGeometry: true,
-              maxRecordCountFactor: 1,
-              outFields: ["STATE_FIPS","FIPS","STATE_ABBR"]
-            });
-
-            countyLayer.queryFeatures(query).then((featureSet) => {
-                const features = featureSet.features;
-                setGeoData(features);
-
-                const centroidArray = features.map(f => {
-                    return {
-                        latitude: f.geometry.centroid.latitude,
-                        longitude: f.geometry.centroid.longitude,
-                        fips: f.attributes.FIPS
-                    }
-                });
-                setCentroids(centroidArray);
-
-                ///// Debug junk to see geometry and attributes
-                const geometries = features.map((f) => f.geometry);
-                console.log("geometries");
-                console.log(geometries);
-                // const attributes = features.map((f) => f.attributes);
-                // console.log("attributes");
-                // console.log(attributes);
-            });
+    ///// Effect: Grab the base geo data layer
+    useEffect( () => {
+        // Don't run this effect without a token
+        if(!token){
+            return;
         }
-    },[token,props.selectedState,countyLayer]);
+        setGeoLayer(fetchGeoLayer());
+    },[token]);
 
-    // Map & view rendering
+    ///// Effect: Get all the data required for the state via API and queryFeatures()
+    useEffect(()=>{
+        // Don't run this without a token and geolayer
+        if(!token || !geoLayer){
+            return;
+        }
+        //////////////////////////
+        // API Calls for state's data by county (census, covid, & flu)
+        //////////////////////////
+
+        // Census Demographic Data
+        fetchEnvData('census',props.selectedState).then(response => setCensusData(response));
+        // Covid Data
+        fetchEnvData('covid',props.selectedState).then(response => setCovidData(response));
+        // Flu Data
+        fetchEnvData('flu',props.selectedState).then(response => setFluData(response));
+
+        // Get the selected state's geo data (polyfill and centroid) from the county map layer
+        getSelectedGeoData(geoLayer,props.selectedState).then(response => setSelectedGeoData(response));
+
+    },[token,props.selectedState,geoLayer]);
+
+    ///// Effect: Creates the mapView
+    useEffect( () => {
+        setView(createMapView(mapDiv.current));
+    },[]);
+    
+    // console.log("census data");
+    // console.log(censusData);
+    // console.log("covid data");
+    // console.log(covidData);
+    // console.log("flu data");
+    // console.log(fluData);
+
+    ///// Effect: Map & view rendering
     useEffect( ()=> {
-        let view;
-        if(censusData && covidData && fluData && geoData){
-            console.log("census data");
-            console.log(censusData);
-            console.log("covid data");
-            console.log(covidData);
-            console.log("flu data");
-            console.log(fluData);
-
-            /////////
-            // Map initialization
-            /////////
-
-            const map = new Map({
-                basemap: "dark-gray-vector"
-                });
-    
-            view = new MapView({
-                map: map,
-                container: mapDiv.current,
-                ui: {
-                    components: []  // Removes the default components: zoom and attribution
-                },
-                center: [-75.165,40.003],
-                zoom: 9
-            });
-            
+        if(mapDiv.current && censusData && covidData && fluData && selectedGeoData && view){
             // Move the view to the collection of features
-            view.goTo(geoData);
-
-            /////////
-            // View modifications
-            /////////
-
-            // Legend for layer data
-            let legend = new Legend({
-                view: view
-            });
-            const legendExpand = new Expand({
-                view: view,
-                content: legend
-            });
-            view.ui.add(legendExpand, "bottom-left");
-    
-            // Button to make the ArcGIS map fullscreen
-            let fullscreen = new Fullscreen({
-                view: view
-            });
-            view.ui.add(fullscreen, "top-right");
-    
-            // List of layers with ability to hide
-            let layerList = new LayerList({
-                view: view
-            });
-            view.ui.add(layerList, "top-left");
-
-            // Disables the "zoom to" feature of the popups
-            view.popup.viewModel.includeDefaultActions = false;
-
-            ///////////
-            // Bookmarks
-            ///////////
-
-            // // generate list of bookmarks
-            // const stateCodes = Object.keys(stateToFips);
-            // const bookmarks = stateCodes.map(code => {
-            //     return new Bookmark({
-            //         name: code,
-            //         viewpoint: {
-            //             targetGeometry: view.extent.center
-            //         }
-            //     });
-            // });
-            // // console.log(bookmarks);
-            // // List of states. When clicked, updates selectedState, which triggers a component update.
-            // const bookmarksWidget = new Bookmarks({
-            //     view: view,
-            //     bookmarks: bookmarks
-            // });  
-            // const bookmarksExpand = new Expand({
-            //     view: view,
-            //     content: bookmarksWidget
-            // });
-            // view.ui.add(bookmarksExpand, "bottom-right");
-            // // when the user selects a bookmark
-            // bookmarksWidget.on("bookmark-select", function(event){
-            //     // console.log(event);
-            //     // bookmarksExpand.expanded = false;
-            //     setCensusData(null);
-            //     setCovidData(null);
-            //     setFluData(null);
-            //     setGeoData(null);
-            //     props.setSelectedState("AZ");
-            // });
-
-            ////////////
-            // Disabling zooming
-            ////////////
-            // view.on("mouse-wheel", function(evt){
-            //   // prevents zooming with the mouse-wheel event
-            //   evt.stopPropagation();
-            // });
-
-            /////////////
-            // Disabling Panning
-            //////////////
-            view.on("drag", function(evt){
-              // prevents panning with the mouse drag event
-              evt.stopPropagation();
-            });
-
-            view.on("key-down", function(evt){
-              // prevents panning with the arrow keys
-              var keyPressed = evt.key;
-              if(keyPressed.slice(0,5) === "Arrow"){
-                evt.stopPropagation();
-              }
-            });
+            view.goTo(selectedGeoData.features);
 
             //////////////////////////
             // Census Layer (county geo data + census county demographic info)
@@ -308,7 +85,7 @@ function BuiltMap(props) {
             ////////
             // Merge county geo data & census county data
             ////////
-            const mergedData = geoData.map((f,index) => {
+            const mergedData = selectedGeoData.features.map((f,index) => {
                 const matchedData = censusData.find(county => county.fips === f.attributes.FIPS);
                 let newF = f;
                 if(matchedData){
@@ -424,7 +201,7 @@ function BuiltMap(props) {
                 opacity: 0.5
             });
             // Add census layer to map
-            map.layers.add(censusLayer);
+            view.map.layers.add(censusLayer);
 
             /////////////////////////
             // Covid Layer
@@ -435,7 +212,7 @@ function BuiltMap(props) {
             /////////
 
             const covidGraphics = covidData.map((county,index) => {
-                const countyCentroid = centroids.find(c => c.fips === county.fips);
+                const countyCentroid = selectedGeoData.centroids.find(c => c.fips === county.fips);
 
                 return new Graphic({
                     attributes: {
@@ -523,7 +300,7 @@ function BuiltMap(props) {
                 opacity: 0.7
             });
             // Add covid layer to map
-            map.layers.add(covidLayer);
+            view.map.layers.add(covidLayer);
 
             /////////////////////////
             // Flu Layer
@@ -535,7 +312,7 @@ function BuiltMap(props) {
                 /////////
 
                 const fluGraphics = fluData.map((county,index) => {
-                    const countyCentroid = centroids.find(c => c.fips === county.fips);
+                    const countyCentroid = selectedGeoData.centroids.find(c => c.fips === county.fips);
 
                     return new Graphic({
                         attributes: {
@@ -623,14 +400,13 @@ function BuiltMap(props) {
                     opacity: 0.7
                 });
                 // Add covid layer to map
-                map.layers.add(fluLayer);
+                view.map.layers.add(fluLayer);
             }
 
         } // End of if wrapper
-        return () => view?.destroy();
-    },[censusData,covidData,fluData,geoData,centroids]);
+    },[censusData,covidData,fluData,selectedGeoData,view]);
 
     return (<div className="staticMap" ref={mapDiv}></div>);
 }
 
-export default BuiltMap;
+export default StaticMap;
