@@ -16,17 +16,20 @@ function StaticMap(props) {
     const [token,setToken] = useState(null);  // ArcGIS OAuth token
     const [geoLayer, setGeoLayer] = useState(null);   // FeatureLayer with county geospatial data
     // geoData for the current state
-    const [selectedGeoData, setSelectedGeoData] = useState(null);   // objected with keys: features, centroids
-    // Raw data for layers from API for current state
+    const [selectedGeoData, setSelectedGeoData] = useState(null);   // object with keys: features, centroids
+    // Raw data for layers from API for current state   //**** Could make this an object with keys: censusData and an array illnessData with all the layers of illness data */
     const [censusData, setCensusData] = useState(null);
     const [covidData, setCovidData] = useState(null);
     const [fluData, setFluData] = useState(null);
     // map state
     const [view, setView] = useState(null);
   
-    ///// Effect: Getting the token
+    ///// Effect: Once at startup stuff => Getting the token and initialize the mapView
     useEffect(()=> {
+        // get token
         setToken(authorizeEsriId());
+        // initialize mapView
+        setView(createMapView(mapDiv.current));
     },[]);
 
     ///// Effect: Grab the base geo data layer
@@ -59,11 +62,6 @@ function StaticMap(props) {
         getSelectedGeoData(geoLayer,props.selectedState).then(response => setSelectedGeoData(response));
 
     },[token,props.selectedState,geoLayer]);
-
-    ///// Effect: Creates the mapView
-    useEffect( () => {
-        setView(createMapView(mapDiv.current));
-    },[]);
     
     // console.log("census data");
     // console.log(censusData);
