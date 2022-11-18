@@ -4,7 +4,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 
 import AuthenticationButton from "./components/AuthenticationButton";
 import StaticMap from "./components/StaticMap";
-
+import StateSelect from "./components/StateSelect";
 import "./App.css";
 
 function App() {
@@ -16,7 +16,9 @@ function App() {
       <AuthenticationButton />
       {isAuthenticated && (
         <>
-          {<StaticMap selectedState={selectedState} setSelectedState={setSelectedState}/>}
+          <StaticMap selectedState={selectedState}/>
+          <p></p>
+          <StateSelect selectedState={selectedState} setSelectedState={setSelectedState}/>
         </>
         )
       }

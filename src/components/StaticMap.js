@@ -35,6 +35,9 @@ function StaticMap(props) {
             return;
         }
 
+        // Wipe the map of previous state
+        view.map.removeAll();
+
         // Get the selected state's geo data (polyfill and centroid) from the county map layer
         getSelectedGeoData(geoLayer,props.selectedState).then(selectedGeoData => {  // object with keys: features, centroids
             // Move the view to the collection of features
