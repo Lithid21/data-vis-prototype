@@ -39,5 +39,6 @@ export const getSelectedGeoData = (geoLayer,selectedState) =>{
             return output;
         });
 
+    // Returns a promise that will resolve to an object with features and centroids
     return geoData;
 }

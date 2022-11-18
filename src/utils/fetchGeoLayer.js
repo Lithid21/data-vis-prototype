@@ -13,5 +13,6 @@ export const fetchGeoLayer = () =>{
         // opacity: 0.5,
         id: "county-layer"
     });
+
     return importLayer;
 };

@@ -19,5 +19,7 @@ export const fetchEnvData = (type,selectedState) =>{
             return response.json();
         })
         .catch( (e) => console.log(e));
+    
+    // Returns a promise that will resolve to the JSON for the data
     return dataJSON;
 };
