@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 
+// 3rd party
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Graphic from "@arcgis/core/Graphic";
 
@@ -43,6 +44,9 @@ function StaticMap(props) {
             // Move the view to the collection of features
             view.goTo(selectedGeoData.features);
 
+            /* **** Could write a layer creation function and send it the data and a properties object with field array, rendering color and type, etc.
+                Then just call it for each layer I want. Do this for the real deal, but for prototype it seems unnecessary since this is already here.
+             */
             //////////////////////////
             // Census Layer (county geo data + census county demographic info)
             //////////////////////////
@@ -59,6 +63,7 @@ function StaticMap(props) {
                             fips: f.attributes.FIPS,
                             population: matchedData.population,
                             medianIncome: matchedData.median_income,
+                            countyName: matchedData.county
                         }
                     } else {
                         newF.attributes = {
@@ -74,7 +79,7 @@ function StaticMap(props) {
 
                 // census popup
                 const censusPopupTemplate = {   // autocasts as new PopupTemplate()
-                    title: "{County Name}",
+                    title: "{countyName}",
                     content: [{
                         type: "fields",
                         fieldInfos: [
@@ -127,40 +132,44 @@ function StaticMap(props) {
                     }]
                 };
 
-            // Census Layer constructor
-            const censusLayer = new FeatureLayer({
-                source: mergedData,
-                title: "Census Demographic Data",
-                renderer: censusRenderer,
-                popupTemplate: censusPopupTemplate,
-                objectIdField: "objectId",
-                geometryType: "polygon",
-                fields: [
-                    {
-                        name: "objectId",
-                        alias: "ObjectId",
-                        type: "oid"
-                    },
-                    {
-                        name: "fips",
-                        alias: "FIPS",
-                        type: "string"
-                    },
-                    {
-                        name: "population",
-                        alias: "Population",
-                        type: "integer"
-                    },
-                    {
-                        name: "medianIncome",
-                        alias: "Median Income",
-                        type: "integer"
-                    },
-                    ],
-                opacity: 0.5
-            });
-            // Add census layer to map
-            view.map.layers.add(censusLayer,0);
+                // Census Layer constructor
+                const censusLayer = new FeatureLayer({
+                    source: mergedData,
+                    title: "Census Demographic Data",
+                    renderer: censusRenderer,
+                    popupTemplate: censusPopupTemplate,
+                    objectIdField: "objectId",
+                    geometryType: "polygon",
+                    fields: [
+                        {
+                            name: "objectId",
+                            alias: "ObjectId",
+                            type: "oid"
+                        },
+                        {
+                            name: "fips",
+                            alias: "FIPS",
+                            type: "string"
+                        },
+                        {
+                            name: "population",
+                            alias: "Population",
+                            type: "integer"
+                        },
+                        {
+                            name: "medianIncome",
+                            alias: "Median Income",
+                            type: "integer"
+                        },
+                        {
+                            name: "countyName",
+                            alias: "County Name",
+                            type: "string"
+                        },],
+                    opacity: 0.5
+                });
+                // Add census layer to map
+                view.map.layers.add(censusLayer,0);
             }).catch(e => console.log(e)); // End of census data fetch .then()
 
             /////////////////////////
@@ -210,7 +219,7 @@ function StaticMap(props) {
 
                 // covid popup
                 const covidPopupTemplate = {   // autocasts as new PopupTemplate()
-                    title: "{County Name} Covid Data",
+                    title: "Covid Data",
                     content: [{
                         type: "fields",
                         fieldInfos: [
@@ -307,7 +316,7 @@ function StaticMap(props) {
     
                     // flu popup
                     const fluPopupTemplate = {   // autocasts as new PopupTemplate()
-                        title: "{County Name} Flu Data",
+                        title: "Flu Data",
                         content: [{
                             type: "fields",
                             fieldInfos: [

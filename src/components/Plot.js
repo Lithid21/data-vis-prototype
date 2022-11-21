@@ -1,7 +1,7 @@
 import React from "react";
 import {
-  BarChart,
-  Bar,
+  LineChart ,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -12,24 +12,20 @@ import {
 
 import '../styles/Plot.css';
 
-function Plot(props) {
-  //props.data
-  let subset = [];
-  if(props.data && props.currentFips){
-    subset = props.data.filter((data) => props.currentFips.includes(data.fips));
-  }
+function Plot({data}) {
+  console.log(data);
   return (
     <div className="container">
-      <ResponsiveContainer  width={"100%"} height={300}>
-        <BarChart data={subset}>
+      <ResponsiveContainer  width={"100%"} height={270}>
+        <LineChart data={data} margin={{top:0, bottom:0,left:25,right:10}}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="fips" />
+          <XAxis dataKey="date" />
           <YAxis />
           <Tooltip />
           <Legend />
-          <Bar dataKey="population" fill="#8884d8" />
-          <Bar dataKey="actuals.vaccinationsCompleted" fill="#82ca9d" />
-        </BarChart>
+          <Line dataKey="cases" stroke="#e87c2a" strokeWidth={2} dot={false}/>
+          <Line dataKey="vaccinations" stroke="#82ca9d" strokeWidth={2} dot={false}/>
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );
