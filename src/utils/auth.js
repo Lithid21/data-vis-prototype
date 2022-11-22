@@ -1,34 +1,32 @@
 import esriId from "@arcgis/core/identity/IdentityManager";
 
 export const authorizeEsriId = () =>{
-    ///// Will's OAuth
-    const clientId = "w6lIDWNWL3EmLRkJ";
-    const clientSecret = "a174ae801bcf41fc8ce361827816f1fa";
-    ///// JP's OAuth
-    //   const clientId = "q3224G4yMQPVZUqd";
-    //   const clientSecret = "e84b18bfa0c84f21a50facbd4cd40756";
+    // the basics
+    const url = "https://mmrmb4dctk.execute-api.us-east-1.amazonaws.com/dev/api/auth";
+    const apiKey = "vRQrsUJebg4KDP9wtlLG73ImGlGQOOWK3Xmcq4nO"; //Dev backend API key    ///*** Will replace with OAuth */
+    const queryOptions = {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey 
+        }
+    };
 
-    // for the body of the token request
-    const parameters = new FormData(); 
-    parameters.append('f', 'json');
-    parameters.append('client_id', clientId);
-    parameters.append('client_secret', clientSecret);
-    parameters.append('grant_type', 'client_credentials');
-    parameters.append('expiration', 1440);    
-
-    // POST to token endpoint, then register the token after it is received.
-    let outToken = fetch("https://www.arcgis.com/sharing/rest/oauth2/token/",{ method: 'POST', body:parameters })
-        .then( (response) => {  //converts the token to a json
-            return response.json();
-        })
-        .then( tokenJSON => {   //registers the token to identity manager
-            const regProps = {
-                server: "https://www.arcgis.com/sharing/rest",
-                token: tokenJSON.access_token
-            };
-            esriId.registerToken(regProps); //Registers the token to the IdentityManager
-            return tokenJSON.access_token;
-        })
-        .catch( (e) => console.log(e));
-    return outToken;
+    // register OAuth token for Esri calls
+    const promise = fetch(url,queryOptions)
+    .then( (response) => {
+        return response.json();
+    })
+    .then((token) => {
+        const regProps = {
+            server: "https://www.arcgis.com/sharing/rest",
+            token: token
+        };
+        esriId.registerToken(regProps); //Registers the token to the IdentityManager
+        return token;
+    })
+    .catch(e => console.log(e));
+    return promise;
 };
+

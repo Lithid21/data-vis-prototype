@@ -1,7 +1,7 @@
 export const fetchEnvData = (type,selectedState) =>{
     // the basics
-    const baseUrl = "https://s06zux4ss0.execute-api.us-east-1.amazonaws.com/staging/api/environmental/";
-    const apiKey = "1gvZdDqRQR9AhQBdSe6d92EXulDs0zxwolGrBOMc"; //Staging API key
+    const baseUrl = "https://mmrmb4dctk.execute-api.us-east-1.amazonaws.com/dev/api/env";
+    const apiKey = "vRQrsUJebg4KDP9wtlLG73ImGlGQOOWK3Xmcq4nO"; //Dev backend API key    //*** swap with Auth0 */
     const queryOptions = {
         method: 'GET',
         mode: 'cors',

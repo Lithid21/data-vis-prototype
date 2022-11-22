@@ -20,8 +20,7 @@ function StaticMap(props) {
 
     ///// Effect: Once at startup stuff => Getting the token and initialize the mapView
     useEffect(()=> {
-        // register OAuth token for Esri calls
-        authorizeEsriId().then(() => {
+        authorizeEsriId().then(()=>{
             // Initialize mapview and store in state
             setView(createMapView(mapDiv.current));
             // fetch geoLayer from repository and then store in state
