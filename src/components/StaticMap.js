@@ -6,7 +6,7 @@ import Graphic from "@arcgis/core/Graphic";
 
 // utils
 import "../styles/StaticMap.css";
-import { authorizeEsriId } from "../utils/auth.js";
+import { authorizeEsriId } from "../utils/authorizeEsriId.js";
 import { fetchGeoLayer } from "../utils/fetchGeoLayer.js";
 import { fetchEnvData } from "../utils/fetchEnvData.js";
 import { getSelectedGeoData } from "../utils/getSelectedGeoData.js";
@@ -20,13 +20,13 @@ function StaticMap(props) {
 
     ///// Effect: Once at startup stuff => Getting the token and initialize the mapView
     useEffect(()=> {
-        authorizeEsriId().then(()=>{
+        authorizeEsriId(props.accessToken).then(()=>{
             // Initialize mapview and store in state
             setView(createMapView(mapDiv.current));
             // fetch geoLayer from repository and then store in state
             setGeoLayer(fetchGeoLayer());
         });
-    },[]);
+    },[props.accessToken]);
 
     ///// Effect: State specific effects. Get all the data required for the state via API and queryFeatures(). Draw the layers for the data.
     useEffect(()=>{
@@ -51,7 +51,7 @@ function StaticMap(props) {
             //////////////////////////
 
             // Census Demographic Data
-            fetchEnvData('census',props.selectedState).then(censusData => {
+            fetchEnvData('census',props.selectedState,props.accessToken).then(censusData => {
                 // census source. Merge county geo data & census county data
                 const mergedData = selectedGeoData.features.map((f,index) => {
                     const matchedData = censusData.find(county => county.fips === f.attributes.FIPS);
@@ -175,7 +175,7 @@ function StaticMap(props) {
             // Covid Layer
             /////////////////////////
             // Covid Data
-            fetchEnvData('covid',props.selectedState).then(covidData => {
+            fetchEnvData('covid',props.selectedState,props.accessToken).then(covidData => {
                 // covid source
                 const covidGraphics = covidData.map((county,index) => {
                     const countyCentroid = selectedGeoData.centroids.find(c => c.fips === county.fips);
@@ -271,7 +271,7 @@ function StaticMap(props) {
             // Flu Layer
             /////////////////////////
             // Flu Data
-            fetchEnvData('flu',props.selectedState).then(fluData => {
+            fetchEnvData('flu',props.selectedState,props.accessToken).then(fluData => {
                 if(fluData.length > 0){
                     // flu source    
                     const fluGraphics = fluData.map((county,index) => {
@@ -368,7 +368,7 @@ function StaticMap(props) {
         }); //End of select geo data .then()
 
         // return () => view?.destroy();
-    },[props.selectedState,view,geoLayer]);
+    },[props.selectedState,view,geoLayer,props.accessToken]);
 
     return (<div className="staticMap" ref={mapDiv}></div>);
 }

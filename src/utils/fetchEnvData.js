@@ -1,13 +1,16 @@
-export const fetchEnvData = (type,selectedState) =>{
+export const fetchEnvData = (type,selectedState,accessToken) =>{
     // the basics
     const baseUrl = "https://mmrmb4dctk.execute-api.us-east-1.amazonaws.com/dev/api/env";
-    const apiKey = "vRQrsUJebg4KDP9wtlLG73ImGlGQOOWK3Xmcq4nO"; //Dev backend API key    //*** swap with Auth0 */
+    // const apiKey = "vRQrsUJebg4KDP9wtlLG73ImGlGQOOWK3Xmcq4nO"; //Dev backend API key    //*** swap with Auth0 */
     const queryOptions = {
         method: 'GET',
         mode: 'cors',
         headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey 
+            'Content-Type': 'application/json',
+            // 'x-api-key': apiKey 
+            'Authorization': `Bearer ${accessToken}`,
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Request-Headers': '*',
         }
     };
 

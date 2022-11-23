@@ -1,15 +1,18 @@
 import esriId from "@arcgis/core/identity/IdentityManager";
 
-export const authorizeEsriId = () =>{
+export const authorizeEsriId = (accessToken) =>{
     // the basics
     const url = "https://mmrmb4dctk.execute-api.us-east-1.amazonaws.com/dev/api/auth";
-    const apiKey = "vRQrsUJebg4KDP9wtlLG73ImGlGQOOWK3Xmcq4nO"; //Dev backend API key    ///*** Will replace with OAuth */
+    // const apiKey = "vRQrsUJebg4KDP9wtlLG73ImGlGQOOWK3Xmcq4nO"; //Dev backend API key    ///*** Will replace with OAuth */
     const queryOptions = {
-        method: 'GET',
-        mode: 'cors',
-        headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey 
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+            'Content-Type': 'application/json',
+            // 'x-api-key': apiKey 
+            'Authorization': `Bearer ${accessToken}`,
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Request-Headers': '*',
         }
     };
 

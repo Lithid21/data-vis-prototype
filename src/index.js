@@ -13,6 +13,8 @@ root.render(
         domain="dev-5ddz999s.us.auth0.com"
         clientId="zDorxVdDQY6IpCwQfNWEDteKTR4D6tid"
         redirectUri={window.location.origin}
+        audience="https://mmrmb4dctk.execute-api.us-east-1.amazonaws.com/dev/api/"
+        scope="read:env"
     >
         <App />
   </Auth0Provider>
