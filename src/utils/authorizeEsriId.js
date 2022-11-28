@@ -26,7 +26,7 @@ export const authorizeEsriId = (accessToken,setEsriToken) =>{
             server: "https://www.arcgis.com/sharing/rest",
             token: token
         };
-        esriId.registerToken(regProps); //Registers the token to the IdentityManager
+        esriId.registerToken(regProps); //Registers the token to the IdentityManager. Nothing returned.
         setEsriToken(token);
         return;
     })

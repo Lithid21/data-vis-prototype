@@ -16,23 +16,24 @@ import { createMapView } from "../utils/createMapView.js";
 function StaticMap(props) {
     const mapDiv = useRef(null);
     // Things defined on startup
-    const [esriToken, setEsriToken] = useState(null);
+    const [esriToken, setEsriToken] = useState(null);   // A dummy state to use for tracking if IdentityManager has registered the token.
     const [geoLayer, setGeoLayer] = useState(null);   // FeatureLayer with county geospatial data
     const [view, setView] = useState(null); // mapView state
 
-    ///// Effect: Once at startup stuff => Getting the token and initialize the mapView
+    ///// Effect: Once at startup stuff => Getting the Esri token and initialize the mapView
     useEffect(()=> {
+        // Only run if Auth0 token set
         if(!props.accessToken)
             return;
-        authorizeEsriId(props.accessToken,setEsriToken);
+        authorizeEsriId(props.accessToken,setEsriToken);    // Returns nothing, but registers the token to the identity manager
     },[props.accessToken]);
 
-    ///// Effect: Once the esri token has been registered, actually do stuff
+    ///// Effect: Once the esri token has been registered, actually do stuff.
     useEffect( () =>{
         // Don't run this effect without an esriToken set
         if(!esriToken)
             return;
-        esriId.checkSignInStatus("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Census_Counties/FeatureServer/0").then((cred) => {
+        esriId.checkSignInStatus("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Census_Counties/FeatureServer/0").then(() => {
             // Initialize mapview and store in state
             setView(createMapView(mapDiv.current));
             // fetch geoLayer from repository and then store in state
