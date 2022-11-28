@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 
 // 3rd party
+import esriId from "@arcgis/core/identity/IdentityManager";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Graphic from "@arcgis/core/Graphic";
 
@@ -15,18 +16,29 @@ import { createMapView } from "../utils/createMapView.js";
 function StaticMap(props) {
     const mapDiv = useRef(null);
     // Things defined on startup
+    const [esriToken, setEsriToken] = useState(null);
     const [geoLayer, setGeoLayer] = useState(null);   // FeatureLayer with county geospatial data
     const [view, setView] = useState(null); // mapView state
 
     ///// Effect: Once at startup stuff => Getting the token and initialize the mapView
     useEffect(()=> {
-        authorizeEsriId(props.accessToken).then(()=>{
+        if(!props.accessToken)
+            return;
+        authorizeEsriId(props.accessToken,setEsriToken);
+    },[props.accessToken]);
+
+    ///// Effect: Once the esri token has been registered, actually do stuff
+    useEffect( () =>{
+        // Don't run this effect without an esriToken set
+        if(!esriToken)
+            return;
+        esriId.checkSignInStatus("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Census_Counties/FeatureServer/0").then((cred) => {
             // Initialize mapview and store in state
             setView(createMapView(mapDiv.current));
             // fetch geoLayer from repository and then store in state
             setGeoLayer(fetchGeoLayer());
         });
-    },[props.accessToken]);
+    },[esriToken]);
 
     ///// Effect: State specific effects. Get all the data required for the state via API and queryFeatures(). Draw the layers for the data.
     useEffect(()=>{

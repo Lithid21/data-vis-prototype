@@ -9,7 +9,9 @@ function PlotPanel (props) {
 
     //// Effect: when selectedState changed, update the data
     useEffect( () => {
-        fetchEnvData('covid_timed',props.selectedState).then(covidData =>{
+        if(!props.accessToken)
+            return;
+        fetchEnvData('covid_timed',props.selectedState,props.accessToken).then(covidData =>{
             let cleanedData = covidData.map(row=> {
                 row.cases = row.cases ? parseInt(row.cases) : 0;
                 row.vaccinations = row.vaccinations ? parseInt(row.vaccinations) : 0;
@@ -21,7 +23,7 @@ function PlotPanel (props) {
                 setPlotData(null);
         }); // End of covid data fetch .then()
 
-    },[props.selectedState]);
+    },[props.selectedState,props.accessToken]);
 
     return (
         <>

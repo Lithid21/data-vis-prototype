@@ -11,10 +11,10 @@ const root = createRoot(container);
 root.render(
     <Auth0Provider
         domain="dev-5ddz999s.us.auth0.com"
-        clientId="zDorxVdDQY6IpCwQfNWEDteKTR4D6tid"
+        clientId="zDorxVdDQY6IpCwQfNWEDteKTR4D6tid" // SPA client ID
         redirectUri={window.location.origin}
-        audience="https://mmrmb4dctk.execute-api.us-east-1.amazonaws.com/dev/api/"
-        scope="read:env"
+        audience="https://mmrmb4dctk.execute-api.us-east-1.amazonaws.com/dev/api/"  //API audience
+        scope="read:env"    // API Scope
     >
         <App />
   </Auth0Provider>

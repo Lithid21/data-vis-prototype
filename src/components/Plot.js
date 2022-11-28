@@ -13,7 +13,7 @@ import {
 import '../styles/Plot.css';
 
 function Plot({data}) {
-  console.log(data);
+  // console.log(data);
   return (
     <div className="container">
       <ResponsiveContainer  width={"100%"} height={270}>

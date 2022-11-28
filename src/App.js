@@ -18,10 +18,12 @@ function App() {
     if(!isAuthenticated) //Don't run if not authenticated
       return;
     getAccessTokenSilently({
-      audience: "https://mmrmb4dctk.execute-api.us-east-1.amazonaws.com/dev/api/",
-      scope: 'read:env'
+      audience: "https://mmrmb4dctk.execute-api.us-east-1.amazonaws.com/dev/api/", // API audience
+      scope: 'read:env' // API scope
     }).then(token =>{
       if(token){
+        // console.log('token');
+        // console.log(token);
         setAccessToken(token);
         return;
       } else {
@@ -38,7 +40,7 @@ function App() {
           <StaticMap selectedState={selectedState} accessToken={accessToken}/>
           <p></p>
           <StateSelect selectedState={selectedState} setSelectedState={setSelectedState}/>
-          <PlotPanel selectedState={selectedState}/>
+          <PlotPanel selectedState={selectedState} accessToken={accessToken}/>
         </>
         )
       }
